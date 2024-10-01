@@ -1,19 +1,18 @@
 import logging
 import subprocess
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+from utils.ssh import ssh_command
 
 
-def main():
-    process = subprocess.Popen(["find", "/", "-user", "flag00"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, _ = process.communicate()
+def solve_level00(ssh_instance):
+    logging.debug("Finding files owned by flag00")
+    output = ssh_command(ssh_instance, "find / -user flag00")
 
-    files = [str(f) for f in output.decode().split("\n") if "john" in f]
+    files = [str(f) for f in output.split("\n") if "john" in f]
 
     logging.debug("Files found: %s", files)
-    with open(files[0], "r") as file:
-        content = file.read().strip()
-        logging.debug("Content (%s): %s", files[0], content)
+    content = ssh_command(ssh_instance, f"cat {files[0]}").strip()
+    logging.debug("Content (%s): %s", files[0], content)
 
     logging.debug("Trying to decode the content with cesar cipher")
     for i in range(1, 26):
@@ -31,7 +30,3 @@ def cesar_cipher(text, shift):
         else:
             result += char
     return result
-
-
-if __name__ == "__main__":
-    main()
